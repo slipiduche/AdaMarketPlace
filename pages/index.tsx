@@ -2,6 +2,7 @@ import Head from 'next/head'
 
 import { TitleContainer } from "../src/components/Elements/TitleContainer/TitleContainer"
 import { BlobContainer } from "../src/components/Elements/BlobElements/BlobContainer"
+import App from "../src/components/Elements/ContractElements/contractTest"
 
 const ADABlobs = () =>
 {
@@ -16,7 +17,7 @@ const ADABlobs = () =>
                 <title>ADA Blobs</title>
                 <link rel="icon" href="/favicon.ico" />
             </Head>            
-            <TitleContainer />            
+            <App />            
             <BlobContainer />
         </>
     )

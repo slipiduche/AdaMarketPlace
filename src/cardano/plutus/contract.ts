@@ -38,8 +38,10 @@ export const MARKETPLACE_ADDRESS = () => {
     3: Sign and submit transaction
 */
 export const start = async (auctionDetails: SellOffer) => {
+    console.log(auctionDetails)
     // Build the auction datum and initialize transaction data
     const datum = SellOffer_DATUM(auctionDetails);
+    console.log(datum);
     const { txBuilder, datums, metadata, outputs } = await initializeTransaction();
 
     // Get the connected wallet address and utxos to ensure they have enough ADA and the proper NFT to auction

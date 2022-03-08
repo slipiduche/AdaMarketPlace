@@ -4,5 +4,5 @@ export const getBlobAuctionDatum = (blob : BlobChainAsset, blobScriptData: any) 
     const utxoData = blobScriptData[blob.asset];
     if (!utxoData) return null;
     const datum = utxoData.datum;
-    return datum as AuctionDatum;
+    return datum as SellOfferDatum;
 }

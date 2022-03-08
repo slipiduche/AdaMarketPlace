@@ -239,6 +239,8 @@ import {
         BigInt(outputs.len()) * BigInt(protocolParameters.minUTxO);
   
       let amount = Loader.Cardano.Value.new(Loader.Cardano.BigNum.from_str("0"));
+      console.log('ramdomimprove');
+      console.log(preset);
   
       for (let i = 0; i < preset.length; i++) {
         amount = addAmounts(preset[i].output().amount(), amount);

@@ -34,7 +34,8 @@ export const fetchAddressAuctions = async ({ queryKey }: any) => {
     if (!address) return { };
     
     const response = await fetch(`${adablobsAPI.baseURL}${adablobsAPI.endpoints.addresses.auctions(address)}`);
-    const data = await response.json();    
+    const data = await response.json();   
+    console.log(data); 
 
     let datum = null;
     let sellerAddress = null;
@@ -124,7 +125,7 @@ export const fetchAssetAuction = async ({ queryKey } : any) => {
     }
 
     const assetUtxo: any = assetUtxos[assetUtxos.length - 1]; 
-    const auctionDatum: AuctionDatum = getAuctionDatum(assetUtxo?.datum) as AuctionDatum;
+    const auctionDatum: SellOfferDatum = getAuctionDatum(assetUtxo?.datum) as SellOfferDatum;
     return auctionDatum;
 }
 

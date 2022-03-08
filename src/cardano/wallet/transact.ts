@@ -60,10 +60,12 @@ export const finalizeTransaction = async ({
     // Build the transaction inputs using the random improve algorithm
     // Algorithm details: https://input-output-hk.github.io/cardano-coin-selection/haddock/cardano-coin-selection-1.0.1/Cardano-CoinSelection-Algorithm-RandomImprove.html
     //@ts-ignore
+    console.log('adding inputs');
     let { input, change } : any = CoinSelection.randomImprove(utxos, outputs, 8, scriptUtxo ? [scriptUtxo] : []);
     input.forEach((utxo: any) => { 
         txBuilder.add_input(utxo.output().address(), utxo.input(), utxo.output().amount()); 
     });
+    console.log('pass');
 
     // Build the transaction outputs
     for (let i = 0; i < outputs.len(); i++) 
