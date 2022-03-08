@@ -31,7 +31,7 @@ export const assetsToValue = (assets: any) => {
             // console.log(asset.unit.slice(0, 56));
             // console.log(asset.unit.slice(57));
             assetsValue.insert(
-                Loader.Cardano.AssetName.new(Buffer.from(asset.unit.slice(57), "hex")),
+                Loader.Cardano.AssetName.new(Buffer.from(asset.unit.slice(56), "hex")),
                 Loader.Cardano.BigNum.from_str(asset.quantity)
             );
         });

@@ -5,7 +5,7 @@ import CoinSelection from '../CoinSelection';
 import { fromHex, toHex } from '../serialization';
 import { fee } from '../consts';
 import { CONTRACT, MARKETPLACE_ADDRESS } from '../plutus/contract';
-import { bytesToArray } from '../plutus/utils';
+import { bytesToArray, getAssetUtxos, getAuctionDatum, getAuctionRedeemer } from '../plutus/utils';
 import { fetchCurrentSlot } from '../../api/requests';
 
 export const DATUM_LABEL = 405;
@@ -148,9 +148,18 @@ export const finalizeTransaction = async ({
 
     // Ensure proper redeemers for transaction
     if (scriptUtxo) {
+        console.log('has script')
         const redeemers = Loader.Cardano.Redeemers.new();
         const redeemerIndex = txBuilder.index_of_input(scriptUtxo.input()).toString();
+        console.log(redeemerIndex)
         redeemers.add(action(redeemerIndex));
+        console.log(redeemers.get(0));
+        console.log(getAuctionRedeemer(
+            redeemers.get(0)
+        ))
+
+        console.log(getAuctionDatum(datums.get(0)))
+        console.log(getAuctionDatum(datums.get(1)))
         txBuilder.set_redeemers(
             Loader.Cardano.Redeemers.from_bytes(redeemers.to_bytes())
         );
@@ -169,15 +178,15 @@ export const finalizeTransaction = async ({
         transactionWitnessSet.set_plutus_data(datums);
         transactionWitnessSet.set_redeemers(redeemers);
 
-        // Get the current blockchain slot time
-        const currentTime = await fetchCurrentSlot()
+        // // Get the current blockchain slot time
+        // const currentTime = await fetchCurrentSlot()
 
-        // set_validity_start_interval is the current slot on the cardano blockchain
-        txBuilder.set_validity_start_interval(currentTime.slot);
+        // // set_validity_start_interval is the current slot on the cardano blockchain
+        // txBuilder.set_validity_start_interval(currentTime.slot);
 
-        // ttl is an absolute slot number greater than the current slot. This code sets the ttl to "timeToLive" seconds after the current slot
-        // Transactions will silently fail and not place a bid if this time window is not before the end of the auction
-        txBuilder.set_ttl(currentTime.slot + timeToLive);
+        // // ttl is an absolute slot number greater than the current slot. This code sets the ttl to "timeToLive" seconds after the current slot
+        // // Transactions will silently fail and not place a bid if this time window is not before the end of the auction
+        // txBuilder.set_ttl(currentTime.slot + timeToLive);
     }
 
     // Attach metadata to the transaction

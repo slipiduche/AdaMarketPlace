@@ -102,9 +102,12 @@ export const fetchTxMetadata = async (tx_hash: string) => {
 }
 
 export const fetchAssetUtxos = async (address: string, asset: string) => 
-{
+{   console.log(`${blockfrostAPI.clientURL}${blockfrostAPI.clientEndpoints.addresses.utxos.asset(address, asset)}`)
     const response = await fetch(`${blockfrostAPI.clientURL}${blockfrostAPI.clientEndpoints.addresses.utxos.asset(address, asset)}`);
-    return response.json();    
+    const resp=await response.json()
+    console.log('resp:')
+    console.log(resp)
+    return resp;    
 }
 
 export const fetchAssetOwner = async ({ queryKey } : any) => {

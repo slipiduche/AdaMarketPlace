@@ -99,7 +99,7 @@ export const start = async (auctionDetails: SellOffer) => {
             CONTRACT_ADDRESS(),
             assetsToValue([
                 {
-                    unit: auctionDetails.aCurrency +'.' +auctionDetails.aToken,
+                    unit: auctionDetails.aCurrency +auctionDetails.aToken,
                     quantity: "1",
                 }
             ]),
@@ -189,11 +189,12 @@ export const bid = async (asset: string, buyOffer: BuyOffer) => {
     if (!assetUtxo) {
         throw new Error("No acceptable Utxo for this transaction.");
     }
-
+    console.log(assetUtxo)
     const currentValue = assetUtxo.utxo.output().amount();
     const currentBidAmountLovelace = parseInt(currentValue.coin().to_str());
+    console.log(currentBidAmountLovelace)
     const auctionDatum: SellOfferDatum = getAuctionDatum(assetUtxo.datum) as SellOfferDatum;
-
+    console.log(auctionDatum)
     const { txBuilder, datums, metadata, outputs } = await initializeTransaction();
     const walletAddress = await WalletAPI.getBaseAddress();
     const utxos = await WalletAPI.getUtxos();

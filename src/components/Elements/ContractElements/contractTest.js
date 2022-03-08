@@ -377,7 +377,7 @@ export default class App extends React.Component {
                         const policyIdHex = Buffer.from(policyId.to_bytes(), "utf8").toString("hex");
                         // console.log(`policyId: ${policyIdHex}`)
                         const assets = multiasset.get(policyId)
-                        
+
                         const assetNames = assets.keys();
                         const K = assetNames.len()
                         // console.log(`${K} Assets in the Multiasset`)
@@ -2082,7 +2082,19 @@ export default class App extends React.Component {
                                 />
                             </FormGroup>
                             {/* <button style={{ padding: "10px" }} onClick={this.buildRedeemTokenFromPlutusScript}>Run</button> */}
-                            <button style={{ padding: "10px" }} onClick={()=>{}
+                            <button style={{ padding: "10px" }} onClick={() => {
+                                const shelleyChangeAddress = Address.from_bech32(this.state.changeAddress)
+                                const sellerBaseAddress = BaseAddress.from_address(shelleyChangeAddress)
+
+
+                                bid(
+                                    'a89c237e2ef5ca2a6dde7ba62f6f06c1b4afb24cd55a7a1a048da342646967697261636b', {
+                                    bBuyer: toHex(sellerBaseAddress.payment_cred().to_keyhash().to_bytes()),
+                                    bBuyOffer: '10000000'
+                                }
+
+                                )
+                            }
                             }>Run</button>
                         </div>
                     } />

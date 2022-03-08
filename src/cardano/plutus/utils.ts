@@ -72,13 +72,15 @@ export const cleanUtxos = (utxos: any) => {
 
 export const getAuctionDatum = (datum: any): SellOfferDatum | null => {
     try {
+
+
         const rawAuctionDetails = datum.as_constr_plutus_data().data().get(0).as_constr_plutus_data().data();
         const rawBidDetails = datum.as_constr_plutus_data().data().get(1).as_constr_plutus_data().data();
-
         const aSeller = toHex(Loader.Cardano.Ed25519KeyHash.from_bytes(rawAuctionDetails.get(0).as_bytes()).to_bytes());
-        const aCurrency = toHex(rawAuctionDetails.get(1).as_bytes());
-        const aToken = toHex(rawAuctionDetails.get(2).as_bytes());
-        const aSellPrice = rawAuctionDetails.get(5).as_integer().as_u64().to_str();
+        console.log('trying')
+        const aCurrency = toHex(rawAuctionDetails.get(2).as_bytes());
+        const aToken = toHex(rawAuctionDetails.get(3).as_bytes());
+        const aSellPrice = rawAuctionDetails.get(1).as_integer().as_u64().to_str();
 
         const auctionDetails: SellOffer = { aSeller, aSellPrice, aCurrency, aToken };
         let auctionDatum: SellOfferDatum = { adSellOffer: auctionDetails };
@@ -90,19 +92,25 @@ export const getAuctionDatum = (datum: any): SellOfferDatum | null => {
             const bidDetails: BuyOffer = { bBuyer, bBuyOffer }
             auctionDatum['adBuyOffer'] = bidDetails;
         }
+        console.log(auctionDatum)
 
         return auctionDatum;
     }
     catch (error) {
+        console.log(error)
         return null;
     }
 }
 
 export const getAuctionRedeemer = (redeemer: any): SellOfferRedeemer => {
     const rawBidDetails = redeemer.data().as_constr_plutus_data().data();
-
-    const bBuyer = toHex(Loader.Cardano.Ed25519KeyHash.from_bytes(rawBidDetails.get(0).as_bytes()).to_bytes());
-    const bBuyOffer= rawBidDetails.get(1).as_integer().as_u64().to_str();
+    // console.log(rawBidDetails.get(0).as_constr_plutus_data().data().len())
+    // //console.log(toHex(Loader.Cardano.Ed25519KeyHash.from_bytes(rawBidDetails.get(0).as_constr_plutus_data().data().get(0).as_bytes().to_bytes())))
+    // console.log(toHex((Loader.Cardano.Ed25519KeyHash.from_bytes(rawBidDetails.get(0).as_constr_plutus_data().data().get(0).as_bytes())).to_bytes()))
+    // console.log(rawBidDetails.get(0).as_constr_plutus_data().data().get(1).as_integer().to_str())
+    
+    const bBuyer = toHex((Loader.Cardano.Ed25519KeyHash.from_bytes(rawBidDetails.get(0).as_constr_plutus_data().data().get(0).as_bytes())).to_bytes())
+    const bBuyOffer = rawBidDetails.get(0).as_constr_plutus_data().data().get(1).as_integer().to_str()
     const bidDetails: BuyOffer = { bBuyer, bBuyOffer };
     const auctionRedeemer = { arBuyOffer: bidDetails };
     return auctionRedeemer;

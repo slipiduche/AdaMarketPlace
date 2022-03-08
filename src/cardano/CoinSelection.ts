@@ -240,13 +240,13 @@ import {
         //console.log(_minUTxOValue)
   
       let amount = Loader.Cardano.Value.new(Loader.Cardano.BigNum.from_str("0"));
-      
-      //console.log(preset);
+      console.log('preset')
+      console.log(preset);
   
       for (let i = 0; i < preset.length; i++) {
         amount = addAmounts(preset[i].output().amount(), amount);
       }
-      
+      console.log(amount);
       /** @type {UTxOSelection} */
       let utxoSelection = {
         selection: [...preset], // Shallow copy
