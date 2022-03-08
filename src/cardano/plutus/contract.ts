@@ -82,10 +82,10 @@ export const MARKETPLACE_ADDRESS = () => {
 */
 export const start = async (auctionDetails: SellOffer) => {
     
-    console.log(auctionDetails)
+     console.log(auctionDetails)
     // Build the auction datum and initialize transaction data
     const datum = SellOffer_DATUM(auctionDetails);
-    console.log(datum);
+    // console.log(datum);
     const { txBuilder, datums, metadata, outputs } = await initializeTransaction();
 
     // Get the connected wallet address and utxos to ensure they have enough ADA and the proper NFT to auction
@@ -93,7 +93,7 @@ export const start = async (auctionDetails: SellOffer) => {
     const utxos = await WalletAPI.getUtxos();
 
     // The contract receives a blob NFT as an output
-    console.log(auctionDetails.aToken);
+    // console.log(auctionDetails.aToken);
     outputs.add(
         createOutput(
             CONTRACT_ADDRESS(),
@@ -112,23 +112,24 @@ export const start = async (auctionDetails: SellOffer) => {
         )
     ) 
     
-    console.log(outputs.get(0).amount().coin().to_str())
+    // console.log(outputs.get(0).amount().coin().to_str())
     const multiasset=outputs.get(0).amount().multiasset()
+    
     if (multiasset) {
         const keys = multiasset.keys() // policy Ids of thee multiasset
         const N = keys.len();
-        // console.log(`${N} Multiassets in the UTXO`)
+         console.log(`${N} Multiassets in the UTXO`)
 
 
         for (let i = 0; i < N; i++) {
             const policyId = keys.get(i);
             const policyIdHex = Buffer.from(policyId.to_bytes(), "utf8").toString("hex");
-            // console.log(`policyId: ${policyIdHex}`)
+           console.log(`policyId: ${policyIdHex}`)
             const assets = multiasset.get(policyId)
             
             const assetNames = assets.keys();
             const K = assetNames.len()
-            // console.log(`${K} Assets in the Multiasset`)
+             console.log(`${K} Assets in the Multiasset`)
             let multiAssetStr=''
             for (let j = 0; j < K; j++) {
                 const assetName = assetNames.get(j);
@@ -141,7 +142,7 @@ export const start = async (auctionDetails: SellOffer) => {
                 const multiassetAmt = assets.get(assetName)
                 multiAssetStr += `+ ${multiassetAmt.to_str()} + ${policyIdHex}.${assetNameHex} (${assetNameString})`
                  
-                // console.log(`Asset Name: ${assetNameHex}`)
+                 console.log(`Asset Name: ${assetNameHex}`)
             }
             console.log(multiAssetStr)
         }
@@ -160,7 +161,7 @@ export const start = async (auctionDetails: SellOffer) => {
         txBuilder,
         changeAddress: walletAddress,
         utxos,
-        outputs,
+        outputs:outputs,
         datums,
         metadata,
         scriptUtxo: null,

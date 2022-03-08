@@ -94,7 +94,7 @@ export default class App extends React.Component {
             addressBech32SendADA: "addr_test1qrt7j04dtk4hfjq036r2nfewt59q8zpa69ax88utyr6es2ar72l7vd6evxct69wcje5cs25ze4qeshejy828h30zkydsu4yrmm",
             lovelaceToSend: 3000000,
             assetNameHex: "646967697261636b",
-            assetPolicyIdHex: "aa89c237e2ef5ca2a6dde7ba62f6f06c1b4afb24cd55a7a1a048da342",
+            assetPolicyIdHex: "a89c237e2ef5ca2a6dde7ba62f6f06c1b4afb24cd55a7a1a048da342",
             assetAmountToSend: 1,
             addressScriptBech32: "addr_test1wrsm2a8hl809ran3paw999vct5mgcwtzajkntzs8thqkses8gfqln",
             datumStr: "12345678",

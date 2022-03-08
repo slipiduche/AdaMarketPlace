@@ -13,10 +13,9 @@ export const SELLER_ADDRESS_LABEL = 406;
 export const BIDDER_ADDRESS_LABEL = 407;
 
 const languageViews =
-  "a141005901d59f1a000302590001011a00060bc719026d00011a000249f01903e800011a000249f018201a0025cea81971f70419744d186419744d186419744d186419744d186419744d186419744d18641864186419744d18641a000249f018201a000249f018201a000249f018201a000249f01903e800011a000249f018201a000249f01903e800081a000242201a00067e2318760001011a000249f01903e800081a000249f01a0001b79818f7011a000249f0192710011a0002155e19052e011903e81a000249f01903e8011a000249f018201a000249f018201a000249f0182001011a000249f0011a000249f0041a000194af18f8011a000194af18f8011a0002377c190556011a0002bdea1901f1011a000249f018201a000249f018201a000249f018201a000249f018201a000249f018201a000249f018201a000242201a00067e23187600010119f04c192bd200011a000249f018201a000242201a00067e2318760001011a000242201a00067e2318760001011a0025cea81971f704001a000141bb041a000249f019138800011a000249f018201a000302590001011a000249f018201a000249f018201a000249f018201a000249f018201a000249f018201a000249f018201a000249f018201a00330da70101ff";
+    "a141005901d59f1a000302590001011a00060bc719026d00011a000249f01903e800011a000249f018201a0025cea81971f70419744d186419744d186419744d186419744d186419744d186419744d18641864186419744d18641a000249f018201a000249f018201a000249f018201a000249f01903e800011a000249f018201a000249f01903e800081a000242201a00067e2318760001011a000249f01903e800081a000249f01a0001b79818f7011a000249f0192710011a0002155e19052e011903e81a000249f01903e8011a000249f018201a000249f018201a000249f0182001011a000249f0011a000249f0041a000194af18f8011a000194af18f8011a0002377c190556011a0002bdea1901f1011a000249f018201a000249f018201a000249f018201a000249f018201a000249f018201a000249f018201a000242201a00067e23187600010119f04c192bd200011a000249f018201a000242201a00067e2318760001011a000242201a00067e2318760001011a0025cea81971f704001a000141bb041a000249f019138800011a000249f018201a000302590001011a000249f018201a000249f018201a000249f018201a000249f018201a000249f018201a000249f018201a000249f018201a00330da70101ff";
 
-export const initializeTransaction = async () => 
-{
+export const initializeTransaction = async () => {
     const txBuilder = Loader.Cardano.TransactionBuilder.new(
         Loader.Cardano.LinearFee.new(
             Loader.Cardano.BigNum.from_str(
@@ -52,24 +51,98 @@ export const finalizeTransaction = async ({
     scriptUtxo,
     action,
     timeToLive = 2 * 60 * 60,
-  }: any) => {
-    
+}: any) => {
+
+    for (let i = 0; i < outputs.len(); i++) {
+        //     console.log('adding output');
+        //     console.log(outputs.get(i).amount())
+        const multiasset = outputs.get(i).amount().multiasset()
+        console.log(multiasset.len());
+        if (multiasset) {
+            const keys = multiasset.keys() // policy Ids of thee multiasset
+            const N = keys.len();
+            console.log(`${N} Multiassets in the UTXO`)
+
+
+            for (let i = 0; i < N; i++) {
+                const policyId = keys.get(i);
+                const policyIdHex = Buffer.from(policyId.to_bytes(), "utf8").toString("hex");
+                console.log(`policyId: ${policyIdHex}`)
+                const assets = multiasset.get(policyId)
+
+                const assetNames = assets.keys();
+                const K = assetNames.len()
+                console.log(`${K} Assets in the Multiasset`)
+                let multiAssetStr = ''
+                for (let j = 0; j < K; j++) {
+                    const assetName = assetNames.get(j);
+                    // console.log(assets.get(assetName));
+                    // console.log(assetName);
+                    const assetNameString = Buffer.from(assetName.name(), "utf8").toString();
+                    // console.log(assetNameString)
+                    // console.log(assets.get(assetName).to_str());
+                    const assetNameHex = Buffer.from(assetName.name(), "utf8").toString("hex")
+                    const multiassetAmt = assets.get(assetName)
+                    multiAssetStr += `+ ${multiassetAmt.to_str()} + ${policyIdHex}.${assetNameHex} (${assetNameString})`
+
+                    console.log(`Asset Name: ${assetNameHex}`)
+                }
+                console.log(multiAssetStr)
+            }
+        }
+        //txBuilder.add_output(outputs.get(i));
+    }
+
     // Build the transaction witness set
     const transactionWitnessSet = Loader.Cardano.TransactionWitnessSet.new();
 
     // Build the transaction inputs using the random improve algorithm
     // Algorithm details: https://input-output-hk.github.io/cardano-coin-selection/haddock/cardano-coin-selection-1.0.1/Cardano-CoinSelection-Algorithm-RandomImprove.html
     //@ts-ignore
-    console.log('adding inputs');
-    let { input, change } : any = CoinSelection.randomImprove(utxos, outputs, 10, scriptUtxo ? [scriptUtxo] : []);
-    input.forEach((utxo: any) => { 
-        txBuilder.add_input(utxo.output().address(), utxo.input(), utxo.output().amount()); 
+    //console.log('adding inputs');
+    let { input, change }: any = CoinSelection.randomImprove(utxos, outputs, 10, scriptUtxo ? [scriptUtxo] : []);
+    input.forEach((utxo: any) => {
+        txBuilder.add_input(utxo.output().address(), utxo.input(), utxo.output().amount());
     });
-    console.log('pass');
+    //console.log('pass');
 
     // Build the transaction outputs
-    for (let i = 0; i < outputs.len(); i++) 
-    {
+    for (let i = 0; i < outputs.len(); i++) {
+        console.log('adding output');
+        console.log(outputs.get(i).amount())
+        const multiasset = outputs.get(i).amount().multiasset()
+        if (multiasset) {
+            const keys = multiasset.keys() // policy Ids of thee multiasset
+            const N = keys.len();
+            // console.log(`${N} Multiassets in the UTXO`)
+
+
+            for (let i = 0; i < N; i++) {
+                const policyId = keys.get(i);
+                const policyIdHex = Buffer.from(policyId.to_bytes(), "utf8").toString("hex");
+                //console.log(`policyId: ${policyIdHex}`)
+                const assets = multiasset.get(policyId)
+
+                const assetNames = assets.keys();
+                const K = assetNames.len()
+                // console.log(`${K} Assets in the Multiasset`)
+                let multiAssetStr = ''
+                for (let j = 0; j < K; j++) {
+                    const assetName = assetNames.get(j);
+                    // console.log(assets.get(assetName));
+                    // console.log(assetName);
+                    const assetNameString = Buffer.from(assetName.name(), "utf8").toString();
+                    // console.log(assetNameString)
+                    // console.log(assets.get(assetName).to_str());
+                    const assetNameHex = Buffer.from(assetName.name(), "utf8").toString("hex")
+                    const multiassetAmt = assets.get(assetName)
+                    multiAssetStr += `+ ${multiassetAmt.to_str()} + ${policyIdHex}.${assetNameHex} (${assetNameString})`
+
+                    // console.log(`Asset Name: ${assetNameHex}`)
+                }
+                console.log(multiAssetStr)
+            }
+        }
         txBuilder.add_output(outputs.get(i));
     }
 
@@ -104,7 +177,7 @@ export const finalizeTransaction = async ({
 
         // ttl is an absolute slot number greater than the current slot. This code sets the ttl to "timeToLive" seconds after the current slot
         // Transactions will silently fail and not place a bid if this time window is not before the end of the auction
-        txBuilder.set_ttl(currentTime.slot + timeToLive); 
+        txBuilder.set_ttl(currentTime.slot + timeToLive);
     }
 
     // Attach metadata to the transaction
@@ -113,14 +186,14 @@ export const finalizeTransaction = async ({
         aux_data = Loader.Cardano.AuxiliaryData.new();
         const generalMetadata = Loader.Cardano.GeneralTransactionMetadata.new();
         Object.keys(metadata).forEach((label) => {
-          Object.keys(metadata[label]).length > 0 &&
-            generalMetadata.insert(
-              Loader.Cardano.BigNum.from_str(label),
-              Loader.Cardano.encode_json_str_to_metadatum(
-                JSON.stringify(metadata[label]),
-                1
-              )
-            );
+            Object.keys(metadata[label]).length > 0 &&
+                generalMetadata.insert(
+                    Loader.Cardano.BigNum.from_str(label),
+                    Loader.Cardano.encode_json_str_to_metadatum(
+                        JSON.stringify(metadata[label]),
+                        1
+                    )
+                );
         });
         aux_data.set_metadata(generalMetadata);
         txBuilder.set_auxiliary_data(aux_data);
@@ -149,9 +222,8 @@ export const finalizeTransaction = async ({
                     checkMultiAssets.insert(policy, assets);
                     const checkValue = Loader.Cardano.Value.new(Loader.Cardano.BigNum.from_str("0"));
                     checkValue.set_multiasset(checkMultiAssets);
-                    
-                    if (checkValue.to_bytes().length * 2 >= CardanoBlockchain.protocolParameters.maxValSize) 
-                    {
+
+                    if (checkValue.to_bytes().length * 2 >= CardanoBlockchain.protocolParameters.maxValSize) {
                         partialMultiAssets.insert(policy, assets);
                         return;
                     }
@@ -169,8 +241,8 @@ export const finalizeTransaction = async ({
 
         txBuilder.add_output(
             Loader.Cardano.TransactionOutput.new(
-            changeAddress.to_address(),
-            partialChange
+                changeAddress.to_address(),
+                partialChange
             )
         );
     }
@@ -204,8 +276,8 @@ export const finalizeTransaction = async ({
         tx.body(),
         transactionWitnessSet,
         tx.auxiliary_data()
-    );    
-    
+    );
+
     // Dump hex to read transactions with cardano-cli text-view decode-cbor
     //console.log(toHex(signedTx.to_bytes()));    
     console.log("Full Tx Size: ", signedTx.to_bytes().length);
@@ -215,29 +287,28 @@ export const finalizeTransaction = async ({
 }
 
 // This is the Spacebudz createOutput function (with some updates for ADABlobs to handle multiple addresses) which will build the output of the transaction
-export const createOutput = (address : any, value: any, { index, datum, metadata, sellerAddress, bidderAddress }: any = {}) => 
-{
+export const createOutput = (address: any, value: any, { index, datum, metadata, sellerAddress, bidderAddress }: any = {}) => {
     const minAda = Loader.Cardano.min_ada_required(
         value,
         Loader.Cardano.BigNum.from_str(CardanoBlockchain.protocolParameters.minUtxo),
         datum && Loader.Cardano.hash_plutus_data(datum)
-      );
-      
+    );
+
     if (minAda.compare(value.coin()) == 1) value.set_coin(minAda);
-    
+
     const output = Loader.Cardano.TransactionOutput.new(address, value);
     if (datum) {
         output.set_data_hash(Loader.Cardano.hash_plutus_data(datum));
         metadata[DATUM_LABEL][index] = bytesToArray("0x" + toHex(datum.to_bytes()));
     }
     if (sellerAddress) {
-        console.log("0x" + toHex(sellerAddress.to_address().to_bytes()));
+        //console.log("0x" + toHex(sellerAddress.to_address().to_bytes()));
         metadata[SELLER_ADDRESS_LABEL].address = "0x" + toHex(sellerAddress.to_address().to_bytes());
     }
     if (bidderAddress) {
         metadata[BIDDER_ADDRESS_LABEL].address = "0x" + toHex(bidderAddress.to_address().to_bytes());
     }
-    
+
     return output;
 }
 
@@ -248,8 +319,7 @@ export const splitAmount = (lovelaceAmount: any, address: any, outputs: any) => 
     outputs.add(createOutput(address, Loader.Cardano.Value.new(lovelaceAmount.checked_sub(marketplaceFeeAmount))));
 }
 
-export const lovelacePercentage = (amount: any, p: any) => 
-{
+export const lovelacePercentage = (amount: any, p: any) => {
     // Check mul multiplies the value by 10, we then want to divide by 1000 to get 1%
     const scaledFee = (parseInt(p) * 100).toString();
     return amount.checked_mul(Loader.Cardano.BigNum.from_str("10")).checked_div(Loader.Cardano.BigNum.from_str(scaledFee));
