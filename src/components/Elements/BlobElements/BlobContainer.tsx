@@ -50,7 +50,7 @@ export const BlobContainer = () =>
                             {group.blobs.map((blob : BlobChainAsset) => {
                                 if (isBlobRevealed(blob, revealedAssetsQuery.data) || isHomeAddress(addressQuery.data))  {
                                     const blobStatus = getBlobStatus(blob, ownedAssetsQuery.data, addressAuctionsQuery.data);
-                                    const blobAuctionDatum : AuctionDatum = getBlobAuctionDatum(blob, addressAuctionsQuery.data) as AuctionDatum;
+                                    const blobAuctionDatum : SellOfferDatum = getBlobAuctionDatum(blob, addressAuctionsQuery.data) as SellOfferDatum;
                                     return (
                                         <div className="blob col" key={blob.asset}>
                                             <BlobImage blob={blob} blobStatus={blobStatus} auctionDatum={blobAuctionDatum} />             
