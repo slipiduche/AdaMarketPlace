@@ -4,7 +4,7 @@ import { fromHex } from '../serialization';
 //--------------------------------------------------------------------------------//
 // Redeemers
 //--------------------------------------------------------------------------------//
-export const BID_REDEEMER = (redeemerIndex: number, bidDetails: BidDetails) => 
+export const Buy_REDEEMER = (redeemerIndex: number, bidDetails: BuyOffer) => 
 {
     // The code below creates this json format    
     /*
@@ -21,12 +21,12 @@ export const BID_REDEEMER = (redeemerIndex: number, bidDetails: BidDetails) =>
     }
     */
 
-    const { bdBidder, bdBid } = bidDetails;
+    const { bBuyer, bBuyOffer } = bidDetails;
 
     // Construct Cardano Json
     const bidDetailsFields = Loader.Cardano.PlutusList.new();
-    bidDetailsFields.add(Loader.Cardano.PlutusData.new_bytes(fromHex(bdBidder)))
-    bidDetailsFields.add(Loader.Cardano.PlutusData.new_integer(Loader.Cardano.BigInt.from_str(bdBid)))
+    bidDetailsFields.add(Loader.Cardano.PlutusData.new_bytes(fromHex(bBuyer)))
+    bidDetailsFields.add(Loader.Cardano.PlutusData.new_integer(Loader.Cardano.BigInt.from_str(bBuyOffer)))
     const redeemerData = Loader.Cardano.PlutusData.new_constr_plutus_data(
         Loader.Cardano.ConstrPlutusData.new(
             Loader.Cardano.Int.new_i32(0),

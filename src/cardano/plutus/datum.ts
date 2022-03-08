@@ -4,7 +4,7 @@ import { fromHex } from '../serialization';
 //--------------------------------------------------------------------------------//
 // Datums
 //--------------------------------------------------------------------------------//
-export const START_DATUM = (startAuctionDetails: AuctionDetails) => 
+export const SellOffer_DATUM = (sellOfferDetails: SellOffer) => 
 {
     // The code below creates this json format    
     /*
@@ -49,37 +49,33 @@ export const START_DATUM = (startAuctionDetails: AuctionDetails) =>
     }
     */
 
-    const { adSeller, adCurrency, adToken, adDeadline, adStartTime, adMinBid, adMarketplacePercent, adMarketplaceAddress } = startAuctionDetails;
+    const { aSeller,aSellPrice, aCurrency, aToken } = sellOfferDetails;
 
     // Construct Cardano Json
-    const auctionDetailsFields = Loader.Cardano.PlutusList.new();
-    auctionDetailsFields.add(Loader.Cardano.PlutusData.new_bytes(fromHex(adSeller)))
-    auctionDetailsFields.add(Loader.Cardano.PlutusData.new_bytes(fromHex(adCurrency)))
-    auctionDetailsFields.add(Loader.Cardano.PlutusData.new_bytes(fromHex(adToken)))
-    auctionDetailsFields.add(Loader.Cardano.PlutusData.new_integer(Loader.Cardano.BigInt.from_str(adDeadline)))
-    auctionDetailsFields.add(Loader.Cardano.PlutusData.new_integer(Loader.Cardano.BigInt.from_str(adStartTime)))
-    auctionDetailsFields.add(Loader.Cardano.PlutusData.new_integer(Loader.Cardano.BigInt.from_str(adMinBid)))
-    auctionDetailsFields.add(Loader.Cardano.PlutusData.new_integer(Loader.Cardano.BigInt.from_str(adMarketplacePercent)))
-    auctionDetailsFields.add(Loader.Cardano.PlutusData.new_bytes(fromHex(adMarketplaceAddress)))
+    const sellOfferFields = Loader.Cardano.PlutusList.new();
+    sellOfferFields.add(Loader.Cardano.PlutusData.new_bytes(fromHex(aSeller)))
+    sellOfferFields.add(Loader.Cardano.PlutusData.new_integer(Loader.Cardano.BigInt.from_str(aSellPrice)))
+    sellOfferFields.add(Loader.Cardano.PlutusData.new_bytes(fromHex(aCurrency)))
+    sellOfferFields.add(Loader.Cardano.PlutusData.new_bytes(fromHex(aToken)))
     
-    const auctionDetails = Loader.Cardano.PlutusData.new_constr_plutus_data(
+    const sellOffer = Loader.Cardano.PlutusData.new_constr_plutus_data(
         Loader.Cardano.ConstrPlutusData.new(
             Loader.Cardano.Int.new_i32(0),
-            auctionDetailsFields,
+            sellOfferFields,
         )
     )
 
-    const bidDetailsFields = Loader.Cardano.PlutusList.new();
-    const bidDetails = Loader.Cardano.PlutusData.new_constr_plutus_data(
+    const buyOfferFields = Loader.Cardano.PlutusList.new();
+    const buyOffer = Loader.Cardano.PlutusData.new_constr_plutus_data(
         Loader.Cardano.ConstrPlutusData.new(
             Loader.Cardano.Int.new_i32(1),
-            bidDetailsFields,
+            buyOfferFields,
         )
     )
 
     const datumFields = Loader.Cardano.PlutusList.new();
-    datumFields.add(auctionDetails);
-    datumFields.add(bidDetails);
+    datumFields.add(sellOffer);
+    datumFields.add(buyOffer);
 
     const datum = Loader.Cardano.PlutusData.new_constr_plutus_data(
         Loader.Cardano.ConstrPlutusData.new(
@@ -91,7 +87,7 @@ export const START_DATUM = (startAuctionDetails: AuctionDetails) =>
     return datum;
 }
 
-export const BID_DATUM = (bidAuctionDetails: AuctionDetails, bidBidDetails: BidDetails) => 
+export const BuyOffer_DATUM = (sellOfferDetails: SellOffer, buyOfferDetails: BuyOffer) => 
 {
     // The code below creates this json format    
     /*
@@ -142,50 +138,46 @@ export const BID_DATUM = (bidAuctionDetails: AuctionDetails, bidBidDetails: BidD
     }
     */
 
-    const { adSeller, adCurrency, adToken, adDeadline, adStartTime, adMinBid, adMarketplacePercent, adMarketplaceAddress } = bidAuctionDetails;
+    const { aSeller,aSellPrice ,aCurrency, aToken } = sellOfferDetails;
 
     // Construct Cardano Json
-    const auctionDetailsFields = Loader.Cardano.PlutusList.new();
-    auctionDetailsFields.add(Loader.Cardano.PlutusData.new_bytes(fromHex(adSeller)))
-    auctionDetailsFields.add(Loader.Cardano.PlutusData.new_bytes(fromHex(adCurrency)))
-    auctionDetailsFields.add(Loader.Cardano.PlutusData.new_bytes(fromHex(adToken)))
-    auctionDetailsFields.add(Loader.Cardano.PlutusData.new_integer(Loader.Cardano.BigInt.from_str(adDeadline)))
-    auctionDetailsFields.add(Loader.Cardano.PlutusData.new_integer(Loader.Cardano.BigInt.from_str(adStartTime)))
-    auctionDetailsFields.add(Loader.Cardano.PlutusData.new_integer(Loader.Cardano.BigInt.from_str(adMinBid)))
-    auctionDetailsFields.add(Loader.Cardano.PlutusData.new_integer(Loader.Cardano.BigInt.from_str(adMarketplacePercent)))
-    auctionDetailsFields.add(Loader.Cardano.PlutusData.new_bytes(fromHex(adMarketplaceAddress)))
-    const auctionDetails = Loader.Cardano.PlutusData.new_constr_plutus_data(
+    const sellOfferFields = Loader.Cardano.PlutusList.new();
+    sellOfferFields.add(Loader.Cardano.PlutusData.new_bytes(fromHex(aSeller)))
+    sellOfferFields.add(Loader.Cardano.PlutusData.new_integer(Loader.Cardano.BigInt.from_str(aSellPrice)))
+    sellOfferFields.add(Loader.Cardano.PlutusData.new_bytes(fromHex(aCurrency)))
+    sellOfferFields.add(Loader.Cardano.PlutusData.new_bytes(fromHex(aToken)))
+    const sellOffer = Loader.Cardano.PlutusData.new_constr_plutus_data(
         Loader.Cardano.ConstrPlutusData.new(
             Loader.Cardano.Int.new_i32(0),
-            auctionDetailsFields,
+            sellOfferFields,
         )
     )
 
-    const { bdBidder, bdBid } = bidBidDetails;
+    const { bBuyer, bBuyOffer } = buyOfferDetails;
 
-    const bidDetailsFields = Loader.Cardano.PlutusList.new();
-    bidDetailsFields.add(Loader.Cardano.PlutusData.new_bytes(fromHex(bdBidder)))
-    bidDetailsFields.add(Loader.Cardano.PlutusData.new_integer(Loader.Cardano.BigInt.from_str(bdBid)))
-    const bidDetails = Loader.Cardano.PlutusData.new_constr_plutus_data(
+    const buyOfferFields = Loader.Cardano.PlutusList.new();
+    buyOfferFields.add(Loader.Cardano.PlutusData.new_bytes(fromHex(bBuyer)))
+    buyOfferFields.add(Loader.Cardano.PlutusData.new_integer(Loader.Cardano.BigInt.from_str(bBuyOffer)))
+    const buyOffer = Loader.Cardano.PlutusData.new_constr_plutus_data(
         Loader.Cardano.ConstrPlutusData.new(
             Loader.Cardano.Int.new_i32(0),
-            bidDetailsFields,
+            buyOfferFields,
         )
     )
 
     // Need to wrap the bid details in another constructor due to the Haskell "Maybe"
-    const maybeBidDetailsFields = Loader.Cardano.PlutusList.new();
-    maybeBidDetailsFields.add(bidDetails);
-    const maybeBidDetails = Loader.Cardano.PlutusData.new_constr_plutus_data(
+    const maybeBuyOfferFields = Loader.Cardano.PlutusList.new();
+    maybeBuyOfferFields.add(buyOffer);
+    const maybeBuyOffer = Loader.Cardano.PlutusData.new_constr_plutus_data(
         Loader.Cardano.ConstrPlutusData.new(
             Loader.Cardano.Int.new_i32(0),
-            maybeBidDetailsFields,
+            maybeBuyOfferFields,
         )
     )
 
     const datumFields = Loader.Cardano.PlutusList.new();
-    datumFields.add(auctionDetails);
-    datumFields.add(maybeBidDetails);
+    datumFields.add(sellOffer);
+    datumFields.add(maybeBuyOffer);
 
     const datum = Loader.Cardano.PlutusData.new_constr_plutus_data(
         Loader.Cardano.ConstrPlutusData.new(

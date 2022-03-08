@@ -5,22 +5,20 @@ import { lovelaceToAda } from '../consts';
 import { assetsToValue, fromHex, toHex } from '../serialization';
 import { createOutput, finalizeTransaction, initializeTransaction, splitAmount } from '../wallet/transact';
 
-import { BID_DATUM, START_DATUM } from './datum';
-import { BID_REDEEMER, CLOSE_REDEEMER } from './redeemer';
+import { BuyOffer_DATUM, SellOffer_DATUM } from './datum';
+import { Buy_REDEEMER, CLOSE_REDEEMER } from './redeemer';
 import { getAssetUtxos, getAuctionDatum } from './utils';
 
-export const CONTRACT = () => 
-{
+export const CONTRACT = () => {
     const scripts = Loader.Cardano.PlutusScripts.new();
     scripts.add(Loader.Cardano.PlutusScript.new(fromHex(process.env.NEXT_PUBLIC_HEX_CONTRACT)));
     return scripts;
 };
 
-export const CONTRACT_ADDRESS = () => 
-{
-  return Loader.Cardano.Address.from_bech32(
-    process.env.NEXT_PUBLIC_CONTRACT_ADDRESS
-  );
+export const CONTRACT_ADDRESS = () => {
+    return Loader.Cardano.Address.from_bech32(
+        process.env.NEXT_PUBLIC_CONTRACT_ADDRESS
+    );
 }
 
 export const MARKETPLACE_ADDRESS = () => {
@@ -39,23 +37,22 @@ export const MARKETPLACE_ADDRESS = () => {
     2: Create an output sending an NFT asset to the script address
     3: Sign and submit transaction
 */
-export const start = async (auctionDetails: AuctionDetails) => 
-{
+export const start = async (auctionDetails: SellOffer) => {
     // Build the auction datum and initialize transaction data
-    const datum = START_DATUM(auctionDetails);
+    const datum = SellOffer_DATUM(auctionDetails);
     const { txBuilder, datums, metadata, outputs } = await initializeTransaction();
 
     // Get the connected wallet address and utxos to ensure they have enough ADA and the proper NFT to auction
     const walletAddress = await WalletAPI.getBaseAddress();
     const utxos = await WalletAPI.getUtxos();
-    
+
     // The contract receives a blob NFT as an output
     outputs.add(
         createOutput(
             CONTRACT_ADDRESS(),
             assetsToValue([
                 {
-                    unit: auctionDetails.adCurrency + auctionDetails.adToken,
+                    unit: auctionDetails.aCurrency + auctionDetails.aToken,
                     quantity: "1",
                 }
             ]),
@@ -67,7 +64,7 @@ export const start = async (auctionDetails: AuctionDetails) =>
             }
         )
     )
-    
+
     datums.add(datum);
 
     // Set the required transaction signers
@@ -85,8 +82,8 @@ export const start = async (auctionDetails: AuctionDetails) =>
         metadata,
         scriptUtxo: null,
         action: null,
-      });
-      return txHash;
+    });
+    return txHash;
 }
 
 /*
@@ -98,21 +95,20 @@ export const start = async (auctionDetails: AuctionDetails) =>
     5: If there was already a previous bid, create an output to send ADA back to the previous bidder
     6: Sign and submit transaction
 */
-export const bid = async (asset: string, bidDetails: BidDetails) => 
-{
+export const bid = async (asset: string, buyOffer: BuyOffer) => {
     const assetUtxos = await getAssetUtxos(asset);
     if (assetUtxos?.length > 1) {
-        throw new Error("There can only be 1 utxo for an NFT asset.");     
+        throw new Error("There can only be 1 utxo for an NFT asset.");
     }
 
     const assetUtxo: any = assetUtxos[assetUtxos.length - 1];
     if (!assetUtxo) {
-        throw new Error("No acceptable Utxo for this transaction.");  
+        throw new Error("No acceptable Utxo for this transaction.");
     }
-    
+
     const currentValue = assetUtxo.utxo.output().amount();
-    const currentBidAmountLovelace = parseInt(currentValue.coin().to_str());    
-    const auctionDatum: AuctionDatum = getAuctionDatum(assetUtxo.datum) as AuctionDatum;
+    const currentBidAmountLovelace = parseInt(currentValue.coin().to_str());
+    const auctionDatum: SellOfferDatum = getAuctionDatum(assetUtxo.datum) as SellOfferDatum;
 
     const { txBuilder, datums, metadata, outputs } = await initializeTransaction();
     const walletAddress = await WalletAPI.getBaseAddress();
@@ -120,63 +116,63 @@ export const bid = async (asset: string, bidDetails: BidDetails) =>
 
     datums.add(assetUtxo.datum);
 
-    let newBid = parseInt(bidDetails.bdBid);
-    if (newBid < currentBidAmountLovelace || newBid < parseInt(auctionDatum.adAuctionDetails.adMinBid)) {
-        throw new Error(`Bid is too low. Must bid at least ${(Math.ceil((currentBidAmountLovelace * lovelaceToAda) * 100) / 100).toFixed(2)}₳`);
-    }
+    let newBid = parseInt(buyOffer.bBuyOffer);
+    // if (newBid < currentBidAmountLovelace || newBid < parseInt(auctionDatum.adSellOfferDetails.adMinBid)) {
+    //     throw new Error(`Bid is too low. Must bid at least ${(Math.ceil((currentBidAmountLovelace * lovelaceToAda) * 100) / 100).toFixed(2)}₳`);
+    // }
 
     // Need to add the difference between the currentBidAmountLovelace and the old bid to the newBid
     let oldBid = 0;
-    if (auctionDatum.adBidDetails) {
-        oldBid = parseInt(auctionDatum.adBidDetails?.bdBid)
+    if (auctionDatum.adBuyOffer) {
+        oldBid = parseInt(auctionDatum.adBuyOffer?.bBuyOffer)
     }
     newBid += (currentBidAmountLovelace - oldBid);
 
     // Decrement endDateTime by 15 minutes to account for transactions in the mempool that still are within ttl (time to live)
-    const fifteenMinutes = 1000 * 60 * 15;
-    const endDateTime = parseInt(auctionDatum.adAuctionDetails.adDeadline);
-    const now = Date.now();
-    if (now > (endDateTime - fifteenMinutes)) {
-        throw new Error("The auction has ended.");
-    }
+    // const fifteenMinutes = 1000 * 60 * 15;
+    // const endDateTime = parseInt(auctionDatum.adAuctionDetails.adDeadline);
+    // const now = Date.now();
+    // if (now > (endDateTime - fifteenMinutes)) {
+    //     throw new Error("The auction has ended.");
+    // }
 
-    const startDatetime = parseInt(auctionDatum.adAuctionDetails.adStartTime);
-    if (now < startDatetime) {
-        throw new Error("The auction has not started yet.");
-    }
+    // const startDatetime = parseInt(auctionDatum.adAuctionDetails.adStartTime);
+    // if (now < startDatetime) {
+    //     throw new Error("The auction has not started yet.");
+    // }
 
     // Need time left to calculate TTL
-    const twoHours = 2 * 60 * 60;
-    let timeToLive = (endDateTime - now) - 1; // Subtract 1 second to ensure this time is before the deadline
-    if (timeToLive > twoHours) {
-        timeToLive = twoHours;
-    }
+    // const twoHours = 2 * 60 * 60;
+    // let timeToLive = (endDateTime - now) - 1; // Subtract 1 second to ensure this time is before the deadline
+    // if (timeToLive > twoHours) {
+    //     timeToLive = twoHours;
+    // }
 
-    const bidDatum = BID_DATUM(auctionDatum.adAuctionDetails, bidDetails);
+    const bidDatum = BuyOffer_DATUM(auctionDatum.adSellOffer, buyOffer);
     datums.add(bidDatum);
     outputs.add(
         createOutput(
-            CONTRACT_ADDRESS(), 
+            CONTRACT_ADDRESS(),
             assetsToValue([
                 { unit: "lovelace", quantity: newBid.toString() },
                 { unit: assetUtxo.asset, quantity: "1" },
             ]),
             {
                 index: 0,
-                datum: bidDatum,                
+                datum: bidDatum,
                 metadata: metadata,
                 sellerAddress: assetUtxo.sellerAddress,
                 bidderAddress: walletAddress,
             }
         )
     );
-    
+
     // Pay back prevoius bidder if they exist
     if (assetUtxo.bidderAddress) {
         outputs.add(
             createOutput(
                 assetUtxo.bidderAddress.to_address(),
-                Loader.Cardano.Value.new(Loader.Cardano.BigNum.from_str(auctionDatum.adBidDetails?.bdBid))
+                Loader.Cardano.Value.new(Loader.Cardano.BigNum.from_str(auctionDatum.adBuyOffer?.bBuyOffer))
             )
         );
     }
@@ -193,10 +189,10 @@ export const bid = async (asset: string, bidDetails: BidDetails) =>
         datums,
         metadata,
         scriptUtxo: assetUtxo.utxo,
-        action: (redeemerIndex: any) => BID_REDEEMER(redeemerIndex, bidDetails),
-        timeToLive
+        action: (redeemerIndex: any) => Buy_REDEEMER(redeemerIndex, buyOffer),
+        //timeToLive
     });
-    
+
     return txHash;
 }
 
@@ -209,20 +205,19 @@ export const bid = async (asset: string, bidDetails: BidDetails) =>
     5: Create an output sending ADA to the seller and marketplace
     6: Sign and submit transaction
 */
-export const close = async (asset: string) => 
-{
+export const close = async (asset: string) => {
     const assetUtxos = await getAssetUtxos(asset);
     if (assetUtxos?.length > 1) {
-        throw new Error("There can only be 1 utxo for an NFT asset.");      
+        throw new Error("There can only be 1 utxo for an NFT asset.");
     }
 
     const assetUtxo: any = assetUtxos[assetUtxos.length - 1];
     if (!assetUtxo) {
-        throw new Error("No acceptable Utxo for this transaction.");  
+        throw new Error("No acceptable Utxo for this transaction.");
     }
-    
-    const currentValue = assetUtxo?.utxo.output().amount();  
-    const auctionDatum: AuctionDatum = getAuctionDatum(assetUtxo?.datum) as AuctionDatum;
+
+    const currentValue = assetUtxo?.utxo.output().amount();
+    const auctionDatum: SellOfferDatum = getAuctionDatum(assetUtxo?.datum) as SellOfferDatum;
 
     const { txBuilder, datums, metadata, outputs } = await initializeTransaction();
     const walletAddress = await WalletAPI.getBaseAddress();
@@ -230,23 +225,23 @@ export const close = async (asset: string) =>
 
     datums.add(assetUtxo.datum);
 
-    // Decrement endDateTime by 15 minutes to account for ttl (time to live)
-    const fifteenMinutes = 1000 * 60 * 15;
-    const endDateTime = parseInt(auctionDatum.adAuctionDetails.adDeadline);
-    const now = Date.now();
-    if (now < (endDateTime - fifteenMinutes)) {
-        throw new Error("The auction has not ended yet.");
-    }
+    // // Decrement endDateTime by 15 minutes to account for ttl (time to live)
+    // const fifteenMinutes = 1000 * 60 * 15;
+    // const endDateTime = parseInt(auctionDatum.adSellOffer.adDeadline);
+    // const now = Date.now();
+    // if (now < (endDateTime - fifteenMinutes)) {
+    //     throw new Error("The auction has not ended yet.");
+    // }
 
     // If there is a bidder, Send NFT to bidder, ADA to seller, and ADA to marketplace 
-    if (auctionDatum.adBidDetails && assetUtxo.sellerAddress && assetUtxo.bidderAddress) {        
+    if (auctionDatum.adBuyOffer && assetUtxo.sellerAddress && assetUtxo.bidderAddress) {
         splitAmount(currentValue.coin(), assetUtxo.sellerAddress.to_address(), outputs);
         outputs.add(
             createOutput(
-                assetUtxo.bidderAddress.to_address(),                
+                assetUtxo.bidderAddress.to_address(),
                 assetsToValue([
                     {
-                        unit: auctionDatum.adAuctionDetails.adCurrency + auctionDatum.adAuctionDetails.adToken,
+                        unit: auctionDatum.adSellOffer.aCurrency + auctionDatum.adSellOffer.aToken,
                         quantity: "1",
                     }
                 ]),
@@ -261,10 +256,10 @@ export const close = async (asset: string) =>
     else {
         outputs.add(
             createOutput(
-                assetUtxo.sellerAddress.to_address(),                
+                assetUtxo.sellerAddress.to_address(),
                 assetsToValue([
                     {
-                        unit: auctionDatum.adAuctionDetails.adCurrency + auctionDatum.adAuctionDetails.adToken,
+                        unit: auctionDatum.adSellOffer.aCurrency + auctionDatum.adSellOffer.aToken,
                         quantity: "1",
                     }
                 ]),
@@ -282,13 +277,13 @@ export const close = async (asset: string) =>
     txBuilder.set_required_signers(requiredSigners);
 
     const txHash = await finalizeTransaction({
-      txBuilder,
-      changeAddress: walletAddress,
-      utxos,
-      outputs,
-      datums,
-      scriptUtxo: assetUtxo.utxo,
-      action: (redeemerIndex: any) => CLOSE_REDEEMER(redeemerIndex),
+        txBuilder,
+        changeAddress: walletAddress,
+        utxos,
+        outputs,
+        datums,
+        scriptUtxo: assetUtxo.utxo,
+        action: (redeemerIndex: any) => CLOSE_REDEEMER(redeemerIndex),
     });
     return txHash;
 }

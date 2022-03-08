@@ -1,28 +1,26 @@
-interface AuctionDetails
+interface SellOffer
 {
-    adSeller: string,
-    adCurrency: string,
-    adToken: string,
-    adDeadline: string,
-    adStartTime: string,    
-    adMinBid: string,
-    adMarketplacePercent: string,
-    adMarketplaceAddress: string,
+    aSeller: string,
+    aSellPrice: string,
+    aCurrency: string,
+    aToken: string,   
+    
+    
 }
 
-interface BidDetails 
+interface BuyOffer
 {
-    bdBidder: string,
-    bdBid: string,
+    bBuyer: string,
+    bBuyOffer: string,
 }
 
-interface AuctionDatum 
+interface SellOfferDatum 
 {
-    adAuctionDetails: AuctionDetails,
-    adBidDetails?: BidDetails,
+    adSellOffer: SellOffer,
+    adBuyOffer?: BuyOffer,
 }
 
-interface AuctionRedeemer 
+interface SellOfferRedeemer 
 {
-    arBidDetails?: BidDetails,
+    arBuyOffer?: BuyOffer,
 }
