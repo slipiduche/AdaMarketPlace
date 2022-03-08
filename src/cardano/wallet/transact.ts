@@ -61,7 +61,7 @@ export const finalizeTransaction = async ({
     // Algorithm details: https://input-output-hk.github.io/cardano-coin-selection/haddock/cardano-coin-selection-1.0.1/Cardano-CoinSelection-Algorithm-RandomImprove.html
     //@ts-ignore
     console.log('adding inputs');
-    let { input, change } : any = CoinSelection.randomImprove(utxos, outputs, 8, scriptUtxo ? [scriptUtxo] : []);
+    let { input, change } : any = CoinSelection.randomImprove(utxos, outputs, 10, scriptUtxo ? [scriptUtxo] : []);
     input.forEach((utxo: any) => { 
         txBuilder.add_input(utxo.output().address(), utxo.input(), utxo.output().amount()); 
     });
@@ -231,6 +231,7 @@ export const createOutput = (address : any, value: any, { index, datum, metadata
         metadata[DATUM_LABEL][index] = bytesToArray("0x" + toHex(datum.to_bytes()));
     }
     if (sellerAddress) {
+        console.log("0x" + toHex(sellerAddress.to_address().to_bytes()));
         metadata[SELLER_ADDRESS_LABEL].address = "0x" + toHex(sellerAddress.to_address().to_bytes());
     }
     if (bidderAddress) {

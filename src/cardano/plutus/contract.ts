@@ -8,6 +8,49 @@ import { createOutput, finalizeTransaction, initializeTransaction, splitAmount }
 import { BuyOffer_DATUM, SellOffer_DATUM } from './datum';
 import { Buy_REDEEMER, CLOSE_REDEEMER } from './redeemer';
 import { getAssetUtxos, getAuctionDatum } from './utils';
+import {
+    Address,
+    BaseAddress,
+    MultiAsset,
+    Assets,
+    ScriptHash,
+    Costmdls,
+    Language,
+    CostModel,
+    AssetName,
+    TransactionUnspentOutput,
+    TransactionOutput,
+    Value,
+    TransactionBuilder,
+    LinearFee,
+    BigNum,
+    BigInt,
+    TransactionHash,
+    TransactionInputs,
+    TransactionInput,
+    TransactionWitnessSet,
+    Transaction,
+    PlutusData,
+    PlutusScripts,
+    PlutusScript,
+    PlutusList,
+    Redeemers,
+    Redeemer,
+    RedeemerTag,
+    Ed25519KeyHashes,
+    ConstrPlutusData,
+    ExUnits,
+    Int,
+    NetworkInfo,
+    EnterpriseAddress,
+    TransactionOutputs,
+    hash_transaction,
+    hash_script_data,
+    hash_plutus_data,
+    ScriptDataHash, Ed25519KeyHash, NativeScript, StakeCredential
+} from "../custom_modules/@emurgo/cardano-serialization-lib-browser/cardano_serialization_lib"
+let Buffer = require('buffer/').Buffer
+
 
 export const CONTRACT = () => {
     const scripts = Loader.Cardano.PlutusScripts.new();
@@ -38,6 +81,7 @@ export const MARKETPLACE_ADDRESS = () => {
     3: Sign and submit transaction
 */
 export const start = async (auctionDetails: SellOffer) => {
+    
     console.log(auctionDetails)
     // Build the auction datum and initialize transaction data
     const datum = SellOffer_DATUM(auctionDetails);
@@ -49,12 +93,13 @@ export const start = async (auctionDetails: SellOffer) => {
     const utxos = await WalletAPI.getUtxos();
 
     // The contract receives a blob NFT as an output
+    console.log(auctionDetails.aToken);
     outputs.add(
         createOutput(
             CONTRACT_ADDRESS(),
             assetsToValue([
                 {
-                    unit: auctionDetails.aCurrency + auctionDetails.aToken,
+                    unit: auctionDetails.aCurrency +'.' +auctionDetails.aToken,
                     quantity: "1",
                 }
             ]),
@@ -65,7 +110,43 @@ export const start = async (auctionDetails: SellOffer) => {
                 sellerAddress: walletAddress,
             }
         )
-    )
+    ) 
+    
+    console.log(outputs.get(0).amount().coin().to_str())
+    const multiasset=outputs.get(0).amount().multiasset()
+    if (multiasset) {
+        const keys = multiasset.keys() // policy Ids of thee multiasset
+        const N = keys.len();
+        // console.log(`${N} Multiassets in the UTXO`)
+
+
+        for (let i = 0; i < N; i++) {
+            const policyId = keys.get(i);
+            const policyIdHex = Buffer.from(policyId.to_bytes(), "utf8").toString("hex");
+            // console.log(`policyId: ${policyIdHex}`)
+            const assets = multiasset.get(policyId)
+            
+            const assetNames = assets.keys();
+            const K = assetNames.len()
+            // console.log(`${K} Assets in the Multiasset`)
+            let multiAssetStr=''
+            for (let j = 0; j < K; j++) {
+                const assetName = assetNames.get(j);
+                // console.log(assets.get(assetName));
+                // console.log(assetName);
+                const assetNameString = Buffer.from(assetName.name(), "utf8").toString();
+                // console.log(assetNameString)
+                // console.log(assets.get(assetName).to_str());
+                const assetNameHex = Buffer.from(assetName.name(), "utf8").toString("hex")
+                const multiassetAmt = assets.get(assetName)
+                multiAssetStr += `+ ${multiassetAmt.to_str()} + ${policyIdHex}.${assetNameHex} (${assetNameString})`
+                 
+                // console.log(`Asset Name: ${assetNameHex}`)
+            }
+            console.log(multiAssetStr)
+        }
+    }
+
 
     datums.add(datum);
 

@@ -237,15 +237,16 @@ import {
   
       const _minUTxOValue =
         BigInt(outputs.len()) * BigInt(protocolParameters.minUTxO);
+        console.log(_minUTxOValue)
   
       let amount = Loader.Cardano.Value.new(Loader.Cardano.BigNum.from_str("0"));
-      console.log('ramdomimprove');
+      
       console.log(preset);
   
       for (let i = 0; i < preset.length; i++) {
         amount = addAmounts(preset[i].output().amount(), amount);
       }
-  
+      
       /** @type {UTxOSelection} */
       let utxoSelection = {
         selection: [...preset], // Shallow copy
@@ -258,7 +259,8 @@ import {
   
       // Explode amount in an array of unique asset amount for comparison's sake
       let splitOutputsAmounts = splitAmounts(mergedOutputsAmounts);
-  
+      console.log(splitOutputsAmounts)
+      // console.log(splitOutputsAmounts[1].coin().to_str())
       // Phase 1: Select enough input
       for (let i = 0; i < splitOutputsAmounts.length; i++) {
         createSubSet(utxoSelection, splitOutputsAmounts[i]); // Narrow down for NatToken UTxO
@@ -270,7 +272,7 @@ import {
           _minUTxOValue
         );
       }
-  
+      console.log('ramdomimprove');
       // Phase 2: Improve
       splitOutputsAmounts = sortAmountList(splitOutputsAmounts);
   
@@ -388,6 +390,7 @@ import {
    * @return {UTxOSelection} - Successful random utxo selection.
    */
   function randomSelect(utxoSelection, outputAmount, limit, minUTxOValue) {
+    console.log(utxoSelection)
     let nbFreeUTxO = utxoSelection.subset.length;
     // If quantity is met, return subset into remaining list and exit
     if (
@@ -404,6 +407,7 @@ import {
     if (limit <= 0) {
       throw new Error("INPUT_LIMIT_EXCEEDED");
     }
+    console.log(nbFreeUTxO)
   
     if (nbFreeUTxO <= 0) {
       if (isQtyFulfilled(outputAmount, utxoSelection.amount, 0, 0)) {
@@ -552,6 +556,7 @@ import {
     );
   
     for (let i = 0; i < outputs.len(); i++) {
+      console.log(outputs.get(i).amount());
       compiledAmountList = addAmounts(
         outputs.get(i).amount(),
         compiledAmountList
@@ -690,7 +695,9 @@ import {
    * @param {Value} output - Single compiled output qty requested for payment.
    */
   function createSubSet(utxoSelection, output) {
+    console.log('creating subset');
     if (BigInt(output.coin().to_str()) < BigInt(1)) {
+      console.log('this');
       let subset = [];
       let remaining = [];
       for (let i = 0; i < utxoSelection.remaining.length; i++) {
@@ -706,6 +713,7 @@ import {
       utxoSelection.subset = subset;
       utxoSelection.remaining = remaining;
     } else {
+      console.log('this2');
       utxoSelection.subset = utxoSelection.remaining.splice(
         0,
         utxoSelection.remaining.length

@@ -15,7 +15,7 @@ export const fromAscii = (hex: any) => Buffer.from(hex).toString("hex");
 export const assetsToValue = (assets: any) => {
     const multiAsset = Loader.Cardano.MultiAsset.new();
     const lovelace = assets.find((asset: any) => asset.unit == "lovelace")
-
+    
     // Get the policy ids off all assets
     const policies = [
         ...new Set(assets.filter((asset: any) => asset.unit !== "lovelace").map((asset: any) => asset.unit.slice(0, 56))),
@@ -23,11 +23,14 @@ export const assetsToValue = (assets: any) => {
 
     // Loop through all policies and get their quantity
     policies.forEach((policy: any) => {
-        const policyAssets = assets.filter((asset: any) => asset.unit.slice(0, 56) === policy);
+        
+        const policyAssets = assets.filter((asset: any) => asset.unit.slice(0, 57) === policy);
         const assetsValue = Loader.Cardano.Assets.new();
         policyAssets.forEach((asset: any) => {
+            console.log(asset.unit.slice(0, 57));
+            console.log(asset.unit.slice(58));
             assetsValue.insert(
-                Loader.Cardano.AssetName.new(Buffer.from(asset.unit.slice(56), "hex")),
+                Loader.Cardano.AssetName.new(Buffer.from(asset.unit.slice(58), "hex")),
                 Loader.Cardano.BigNum.from_str(asset.quantity)
             );
         });
