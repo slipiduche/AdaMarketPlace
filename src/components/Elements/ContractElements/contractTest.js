@@ -2082,7 +2082,8 @@ export default class App extends React.Component {
                                 />
                             </FormGroup>
                             {/* <button style={{ padding: "10px" }} onClick={this.buildRedeemTokenFromPlutusScript}>Run</button> */}
-                            <button style={{ padding: "10px" }} onClick={this.buildBuyToken}>Run</button>
+                            <button style={{ padding: "10px" }} onClick={()=>{}
+                            }>Run</button>
                         </div>
                     } />
                     <Tabs.Expander />

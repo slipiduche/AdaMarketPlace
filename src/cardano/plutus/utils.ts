@@ -14,8 +14,10 @@ import { blobPolicyId } from '../consts';
 */
 export const getAssetUtxos = async (asset: string) => {
     let utxos = await fetchAssetUtxos(CONTRACT_ADDRESS().to_bech32(), asset);
+    console.log(utxos);
     utxos = cleanUtxos(utxos);
-    
+    console.log(utxos);
+
     const utxosData = utxos?.map(async (utxo: any) => {
         const metadata = await fetchTxMetadata(utxo.tx_hash);
         let datum = null;
@@ -36,7 +38,7 @@ export const getAssetUtxos = async (asset: string) => {
                 bidderAddress = bidderAddressMetadata.json_metadata.address.slice(2);
                 bidderAddress = Loader.Cardano.BaseAddress.from_address(Loader.Cardano.Address.from_bytes(fromHex(bidderAddress)));
             }
-        }        
+        }
         catch (e) {
             throw new Error("Some required metadata entries were not found");
         }
@@ -45,7 +47,7 @@ export const getAssetUtxos = async (asset: string) => {
         if (toHex(Loader.Cardano.hash_plutus_data(datum).to_bytes()) !== utxo.data_hash) {
             throw new Error("Datum hash doesn't match");
         }
-            
+
         utxo = Loader.Cardano.TransactionUnspentOutput.new(
             Loader.Cardano.TransactionInput.new(
                 Loader.Cardano.TransactionHash.from_bytes(fromHex(utxo.tx_hash)),
@@ -55,7 +57,7 @@ export const getAssetUtxos = async (asset: string) => {
                 CONTRACT_ADDRESS(), assetsToValue(utxo.amount),
             )
         )
-        return { datum, utxo, asset, bidderAddress, sellerAddress }            
+        return { datum, utxo, asset, bidderAddress, sellerAddress }
     });
     return await Promise.all(utxosData);
 }
@@ -68,47 +70,41 @@ export const cleanUtxos = (utxos: any) => {
     return utxos;
 }
 
-export const getAuctionDatum = (datum: any) : AuctionDatum | null => 
-{
+export const getAuctionDatum = (datum: any): SellOfferDatum | null => {
     try {
         const rawAuctionDetails = datum.as_constr_plutus_data().data().get(0).as_constr_plutus_data().data();
         const rawBidDetails = datum.as_constr_plutus_data().data().get(1).as_constr_plutus_data().data();
-    
-        const adSeller = toHex(Loader.Cardano.Ed25519KeyHash.from_bytes(rawAuctionDetails.get(0).as_bytes()).to_bytes());
-        const adCurrency = toHex(rawAuctionDetails.get(1).as_bytes());
-        const adToken = toHex(rawAuctionDetails.get(2).as_bytes());
-        const adDeadline = rawAuctionDetails.get(3).as_integer().as_u64().to_str();
-        const adStartTime = rawAuctionDetails.get(4).as_integer().as_u64().to_str();
-        const adMinBid = rawAuctionDetails.get(5).as_integer().as_u64().to_str();
-        const adMarketplacePercent = rawAuctionDetails.get(6).as_integer().as_u64().to_str();
-        const adMarketplaceAddress = toHex(Loader.Cardano.Ed25519KeyHash.from_bytes(rawAuctionDetails.get(7).as_bytes()).to_bytes());
-        
-        const auctionDetails : AuctionDetails = { adSeller, adCurrency, adToken, adDeadline, adStartTime, adMinBid, adMarketplacePercent, adMarketplaceAddress };
-        let auctionDatum : AuctionDatum = { adAuctionDetails: auctionDetails };
-    
+
+        const aSeller = toHex(Loader.Cardano.Ed25519KeyHash.from_bytes(rawAuctionDetails.get(0).as_bytes()).to_bytes());
+        const aCurrency = toHex(rawAuctionDetails.get(1).as_bytes());
+        const aToken = toHex(rawAuctionDetails.get(2).as_bytes());
+        const aSellPrice = rawAuctionDetails.get(5).as_integer().as_u64().to_str();
+
+        const auctionDetails: SellOffer = { aSeller, aSellPrice, aCurrency, aToken };
+        let auctionDatum: SellOfferDatum = { adSellOffer: auctionDetails };
+
         if (rawBidDetails.len() > 0) {
             const rawMaybeBidDetails = rawBidDetails.get(0).as_constr_plutus_data().data()
-            const bdBidder = toHex(Loader.Cardano.Ed25519KeyHash.from_bytes(rawMaybeBidDetails.get(0).as_bytes()).to_bytes());
-            const bdBid = rawMaybeBidDetails.get(1).as_integer().as_u64().to_str();
-            const bidDetails: BidDetails = { bdBidder, bdBid }
-            auctionDatum['adBidDetails'] = bidDetails;
+            const bBuyer = toHex(Loader.Cardano.Ed25519KeyHash.from_bytes(rawMaybeBidDetails.get(0).as_bytes()).to_bytes());
+            const bBuyOffer = rawMaybeBidDetails.get(1).as_integer().as_u64().to_str();
+            const bidDetails: BuyOffer = { bBuyer, bBuyOffer }
+            auctionDatum['adBuyOffer'] = bidDetails;
         }
-    
+
         return auctionDatum;
     }
     catch (error) {
         return null;
-    }    
+    }
 }
 
-export const getAuctionRedeemer = (redeemer: any): AuctionRedeemer => 
-{
+export const getAuctionRedeemer = (redeemer: any): SellOfferRedeemer => {
     const rawBidDetails = redeemer.data().as_constr_plutus_data().data();
 
-    const bdBidder = toHex(Loader.Cardano.Ed25519KeyHash.from_bytes(rawBidDetails.get(0).as_bytes()).to_bytes());
-    const bdBid = rawBidDetails.get(1).as_integer().as_u64().to_str();
-    const bidDetails: BidDetails = { bdBidder, bdBid };
-    const auctionRedeemer = { arBidDetails: bidDetails };
+    const bBuyer = toHex(Loader.Cardano.Ed25519KeyHash.from_bytes(rawBidDetails.get(0).as_bytes()).to_bytes());
+    const bBuyOffer= rawBidDetails.get(1).as_integer().as_u64().to_str();
+    const bidDetails: BuyOffer = { bBuyer, bBuyOffer };
+    const auctionRedeemer = { arBuyOffer: bidDetails };
     return auctionRedeemer;
 }
 
@@ -126,13 +122,12 @@ export const arrayToBytes = (metadataArray: [string]) => {
     return datum;
 }
 
-export const getValueLength = (value: any) =>
-{
+export const getValueLength = (value: any) => {
     if (!value.multiasset()) return 0;
 
     const policy = Loader.Cardano.ScriptHash.from_bytes(
         Loader.Cardano.Ed25519KeyHash.from_bytes(
-          fromHex(blobPolicyId())
+            fromHex(blobPolicyId())
         ).to_bytes()
     );
     const length = value.multiasset().get(policy).len();
