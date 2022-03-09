@@ -94,7 +94,7 @@ export const finalizeTransaction = async ({
     }
 
     // Build the transaction witness set
-    const transactionWitnessSet = Loader.Cardano.TransactionWitnessSet.new();
+    let transactionWitnessSet = Loader.Cardano.TransactionWitnessSet.new();
 
     // Build the transaction inputs using the random improve algorithm
     // Algorithm details: https://input-output-hk.github.io/cardano-coin-selection/haddock/cardano-coin-selection-1.0.1/Cardano-CoinSelection-Algorithm-RandomImprove.html
@@ -154,12 +154,12 @@ export const finalizeTransaction = async ({
         console.log(redeemerIndex)
         redeemers.add(action(redeemerIndex));
         console.log(redeemers.get(0));
-        console.log(getAuctionRedeemer(
-            redeemers.get(0)
-        ))
+        // console.log(getAuctionRedeemer(
+        //     redeemers.get(0)
+        // ))
 
         console.log(getAuctionDatum(datums.get(0)))
-        console.log(getAuctionDatum(datums.get(1)))
+        //console.log(getAuctionDatum(datums.get(1)))
         txBuilder.set_redeemers(
             Loader.Cardano.Redeemers.from_bytes(redeemers.to_bytes())
         );
@@ -174,9 +174,9 @@ export const finalizeTransaction = async ({
         if (collateral.length <= 0) throw new Error("Your wallet has no collateral. Ensure your connected wallet has collateral. You can follow the guide page for instructions");
         setCollateral(txBuilder, collateral);
 
-        transactionWitnessSet.set_plutus_scripts(CONTRACT());
-        transactionWitnessSet.set_plutus_data(datums);
         transactionWitnessSet.set_redeemers(redeemers);
+        transactionWitnessSet.set_plutus_data(datums);
+        transactionWitnessSet.set_plutus_scripts(CONTRACT());
 
         // // Get the current blockchain slot time
         // const currentTime = await fetchCurrentSlot()
@@ -260,6 +260,7 @@ export const finalizeTransaction = async ({
 
     // Build the full transaction
     const txBody = txBuilder.build();
+    console.log(txBody);
     const tx = Loader.Cardano.Transaction.new(
         txBody,
         Loader.Cardano.TransactionWitnessSet.from_bytes(

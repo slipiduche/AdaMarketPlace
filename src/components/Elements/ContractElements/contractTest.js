@@ -2086,14 +2086,16 @@ export default class App extends React.Component {
                                 const shelleyChangeAddress = Address.from_bech32(this.state.changeAddress)
                                 const sellerBaseAddress = BaseAddress.from_address(shelleyChangeAddress)
 
-
-                                bid(
-                                    'a89c237e2ef5ca2a6dde7ba62f6f06c1b4afb24cd55a7a1a048da342646967697261636b', {
-                                    bBuyer: toHex(sellerBaseAddress.payment_cred().to_keyhash().to_bytes()),
-                                    bBuyOffer: '10000000'
-                                }
-
+                                close(
+                                    'a89c237e2ef5ca2a6dde7ba62f6f06c1b4afb24cd55a7a1a048da342646967697261636b'
                                 )
+                                // bid(
+                                //     'a89c237e2ef5ca2a6dde7ba62f6f06c1b4afb24cd55a7a1a048da342646967697261636b', {
+                                //     bBuyer: toHex(sellerBaseAddress.payment_cred().to_keyhash().to_bytes()),
+                                //     bBuyOffer: '10000000'
+                                // }
+
+                                // )
                             }
                             }>Run</button>
                         </div>
