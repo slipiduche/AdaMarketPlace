@@ -48,7 +48,7 @@ import {
     hash_script_data,
     hash_plutus_data,
     ScriptDataHash, Ed25519KeyHash, NativeScript, StakeCredential
-} from "../custom_modules/@emurgo/cardano-serialization-lib-browser/cardano_serialization_lib"
+} from "../../../node_modules/@emurgo/cardano-serialization-lib-browser/cardano_serialization_lib"
 let Buffer = require('buffer/').Buffer
 
 
@@ -262,9 +262,7 @@ export const bid = async (asset: string, buyOffer: BuyOffer) => {
         );
     }
 
-    const requiredSigners = Loader.Cardano.Ed25519KeyHashes.new();
-    requiredSigners.add(walletAddress.payment_cred().to_keyhash());
-    txBuilder.set_required_signers(requiredSigners);
+    
 
     const txHash = await finalizeTransaction({
         txBuilder,

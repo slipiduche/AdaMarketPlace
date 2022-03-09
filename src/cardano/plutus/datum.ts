@@ -60,7 +60,7 @@ export const SellOffer_DATUM = (sellOfferDetails: SellOffer) =>
     
     const sellOffer = Loader.Cardano.PlutusData.new_constr_plutus_data(
         Loader.Cardano.ConstrPlutusData.new(
-            Loader.Cardano.Int.new_i32(0),
+            Loader.Cardano.BigNum.zero(),
             sellOfferFields,
         )
     )
@@ -68,7 +68,7 @@ export const SellOffer_DATUM = (sellOfferDetails: SellOffer) =>
     const buyOfferFields = Loader.Cardano.PlutusList.new();
     const buyOffer = Loader.Cardano.PlutusData.new_constr_plutus_data(
         Loader.Cardano.ConstrPlutusData.new(
-            Loader.Cardano.Int.new_i32(1),
+            Loader.Cardano.Bignum.from_str(1),
             buyOfferFields,
         )
     )
@@ -79,7 +79,7 @@ export const SellOffer_DATUM = (sellOfferDetails: SellOffer) =>
 
     const datum = Loader.Cardano.PlutusData.new_constr_plutus_data(
         Loader.Cardano.ConstrPlutusData.new(
-            Loader.Cardano.Int.new_i32(0),
+            Loader.Cardano.Int.BigNum.zero(),
             datumFields,
         )
     )
@@ -148,7 +148,7 @@ export const BuyOffer_DATUM = (sellOfferDetails: SellOffer, buyOfferDetails: Buy
     sellOfferFields.add(Loader.Cardano.PlutusData.new_bytes(fromHex(aToken)))
     const sellOffer = Loader.Cardano.PlutusData.new_constr_plutus_data(
         Loader.Cardano.ConstrPlutusData.new(
-            Loader.Cardano.Int.new_i32(0),
+            Loader.Cardano.BigNum.zero(),
             sellOfferFields,
         )
     )
@@ -160,7 +160,7 @@ export const BuyOffer_DATUM = (sellOfferDetails: SellOffer, buyOfferDetails: Buy
     buyOfferFields.add(Loader.Cardano.PlutusData.new_integer(Loader.Cardano.BigInt.from_str(bBuyOffer)))
     const buyOffer = Loader.Cardano.PlutusData.new_constr_plutus_data(
         Loader.Cardano.ConstrPlutusData.new(
-            Loader.Cardano.Int.new_i32(0),
+            Loader.Cardano.BigNum.zero(),
             buyOfferFields,
         )
     )
@@ -170,7 +170,7 @@ export const BuyOffer_DATUM = (sellOfferDetails: SellOffer, buyOfferDetails: Buy
     maybeBuyOfferFields.add(buyOffer);
     const maybeBuyOffer = Loader.Cardano.PlutusData.new_constr_plutus_data(
         Loader.Cardano.ConstrPlutusData.new(
-            Loader.Cardano.Int.new_i32(0),
+            Loader.Cardano.BigNum.zero(),
             maybeBuyOfferFields,
         )
     )
@@ -181,7 +181,7 @@ export const BuyOffer_DATUM = (sellOfferDetails: SellOffer, buyOfferDetails: Buy
 
     const datum = Loader.Cardano.PlutusData.new_constr_plutus_data(
         Loader.Cardano.ConstrPlutusData.new(
-            Loader.Cardano.Int.new_i32(0),
+            Loader.Cardano.BigNum.zero(),
             datumFields,
         )
     )

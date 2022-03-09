@@ -47,7 +47,7 @@ import {
     hash_script_data,
     hash_plutus_data,
     ScriptDataHash, Ed25519KeyHash, NativeScript, StakeCredential
-} from "../../../cardano/custom_modules/@emurgo/cardano-serialization-lib-browser/cardano_serialization_lib"
+} from "../../../../node_modules/@emurgo/cardano-serialization-lib-browser/cardano_serialization_lib"
 import {
     assetsToValue,
     fromAscii,

@@ -6,7 +6,7 @@ import {
     TransactionUnspentOutput,
     TransactionOutputs,
     Value,
-  } from "./custom_modules/@emurgo/cardano-serialization-lib-browser/cardano_serialization_lib";
+  } from "../../../node_modules/@emurgo/cardano-serialization-lib-browser/cardano_serialization_lib";
   import Loader from "./loader";
   const BigInt = typeof window !== "undefined" && window.BigInt;
   
@@ -740,7 +740,7 @@ import {
     if (minUTxOValue && BigInt(outputAmount.coin().to_str()) > 0) {
       let minAmount = Loader.Cardano.Value.new(
         Loader.Cardano.min_ada_required(
-          cumulatedAmount,
+          cumulatedAmount,true,
           Loader.Cardano.BigNum.from_str(minUTxOValue.toString())
         )
       );

@@ -7,7 +7,7 @@ import { fee } from '../consts';
 import { CONTRACT, MARKETPLACE_ADDRESS } from '../plutus/contract';
 import { bytesToArray, getAssetUtxos, getAuctionDatum, getAuctionRedeemer } from '../plutus/utils';
 import { fetchCurrentSlot } from '../../api/requests';
-
+import { TransactionBuilderConfigBuilder, LinearFee } from "@emurgo/cardano-serialization-lib-browser/cardano_serialization_lib";
 export const DATUM_LABEL = 405;
 export const SELLER_ADDRESS_LABEL = 406;
 export const BIDDER_ADDRESS_LABEL = 407;
@@ -16,23 +16,45 @@ const languageViews =
     "a141005901d59f1a000302590001011a00060bc719026d00011a000249f01903e800011a000249f018201a0025cea81971f70419744d186419744d186419744d186419744d186419744d186419744d18641864186419744d18641a000249f018201a000249f018201a000249f018201a000249f01903e800011a000249f018201a000249f01903e800081a000242201a00067e2318760001011a000249f01903e800081a000249f01a0001b79818f7011a000249f0192710011a0002155e19052e011903e81a000249f01903e8011a000249f018201a000249f018201a000249f0182001011a000249f0011a000249f0041a000194af18f8011a000194af18f8011a0002377c190556011a0002bdea1901f1011a000249f018201a000249f018201a000249f018201a000249f018201a000249f018201a000249f018201a000242201a00067e23187600010119f04c192bd200011a000249f018201a000242201a00067e2318760001011a000242201a00067e2318760001011a0025cea81971f704001a000141bb041a000249f019138800011a000249f018201a000302590001011a000249f018201a000249f018201a000249f018201a000249f018201a000249f018201a000249f018201a000249f018201a00330da70101ff";
 
 export const initializeTransaction = async () => {
-    const txBuilder = Loader.Cardano.TransactionBuilder.new(
-        Loader.Cardano.LinearFee.new(
-            Loader.Cardano.BigNum.from_str(
-                CardanoBlockchain.protocolParameters.linearFee.minFeeA
-            ),
-            Loader.Cardano.BigNum.from_str(
-                CardanoBlockchain.protocolParameters.linearFee.minFeeB
-            )
+    let txBuilderConfigBuilder: TransactionBuilderConfigBuilder = Loader.Cardano.TransactionBuilderConfigBuilder.new()
+    const linearFee: LinearFee = Loader.Cardano.LinearFee.new(
+        Loader.Cardano.BigNum.from_str(
+            CardanoBlockchain.protocolParameters.linearFee.minFeeA
         ),
-        Loader.Cardano.BigNum.from_str(CardanoBlockchain.protocolParameters.minUtxo),
-        Loader.Cardano.BigNum.from_str(CardanoBlockchain.protocolParameters.poolDeposit),
-        Loader.Cardano.BigNum.from_str(CardanoBlockchain.protocolParameters.keyDeposit),
-        CardanoBlockchain.protocolParameters.maxValSize,
-        CardanoBlockchain.protocolParameters.maxTxSize,
-        CardanoBlockchain.protocolParameters.priceMem,
-        CardanoBlockchain.protocolParameters.priceStep,
-        Loader.Cardano.LanguageViews.new(Buffer.from(languageViews, "hex"))
+        Loader.Cardano.BigNum.from_str(
+            CardanoBlockchain.protocolParameters.linearFee.minFeeB
+        )
+    )
+    txBuilderConfigBuilder=txBuilderConfigBuilder.fee_algo(linearFee)
+    txBuilderConfigBuilder=txBuilderConfigBuilder.coins_per_utxo_word(Loader.Cardano.BigNum.from_str(CardanoBlockchain.protocolParameters.minUtxo))
+    console.log(linearFee)
+    txBuilderConfigBuilder=txBuilderConfigBuilder.key_deposit(Loader.Cardano.BigNum.from_str(CardanoBlockchain.protocolParameters.keyDeposit))
+    txBuilderConfigBuilder=txBuilderConfigBuilder.max_tx_size(CardanoBlockchain.protocolParameters.maxTxSize)
+    txBuilderConfigBuilder=txBuilderConfigBuilder.max_value_size(CardanoBlockchain.protocolParameters.maxValSize)
+    txBuilderConfigBuilder=txBuilderConfigBuilder.pool_deposit(Loader.Cardano.BigNum.from_str(CardanoBlockchain.protocolParameters.poolDeposit))
+    txBuilderConfigBuilder=txBuilderConfigBuilder.prefer_pure_change(false)
+    console.log('pass');
+
+    const txBuilderConfig = txBuilderConfigBuilder.build()
+
+    const txBuilder = Loader.Cardano.TransactionBuilder.new(
+        txBuilderConfig
+        // Loader.Cardano.LinearFee.new(
+        //     Loader.Cardano.BigNum.from_str(
+        //         CardanoBlockchain.protocolParameters.linearFee.minFeeA
+        //     ),
+        //     Loader.Cardano.BigNum.from_str(
+        //         CardanoBlockchain.protocolParameters.linearFee.minFeeB
+        //     )
+        // ),
+        // Loader.Cardano.BigNum.from_str(CardanoBlockchain.protocolParameters.minUtxo),
+        // Loader.Cardano.BigNum.from_str(CardanoBlockchain.protocolParameters.poolDeposit),
+        // Loader.Cardano.BigNum.from_str(CardanoBlockchain.protocolParameters.keyDeposit),
+        // CardanoBlockchain.protocolParameters.maxValSize,
+        // CardanoBlockchain.protocolParameters.maxTxSize,
+        // CardanoBlockchain.protocolParameters.priceMem,
+        // CardanoBlockchain.protocolParameters.priceStep,
+        // Loader.Cardano.LanguageViews.new(Buffer.from(languageViews, "hex"))
     )
 
     const datums = Loader.Cardano.PlutusList.new();
@@ -260,6 +282,9 @@ export const finalizeTransaction = async ({
 
     // Build the full transaction
     const txBody = txBuilder.build();
+    const requiredSigners = Loader.Cardano.Ed25519KeyHashes.new();
+    requiredSigners.add(changeAddress.payment_cred().to_keyhash());
+    txBody.set_required_signers(requiredSigners);
     const tx = Loader.Cardano.Transaction.new(
         txBody,
         Loader.Cardano.TransactionWitnessSet.from_bytes(
@@ -298,9 +323,9 @@ export const finalizeTransaction = async ({
 // This is the Spacebudz createOutput function (with some updates for ADABlobs to handle multiple addresses) which will build the output of the transaction
 export const createOutput = (address: any, value: any, { index, datum, metadata, sellerAddress, bidderAddress }: any = {}) => {
     const minAda = Loader.Cardano.min_ada_required(
-        value,
-        Loader.Cardano.BigNum.from_str(CardanoBlockchain.protocolParameters.minUtxo),
-        datum && Loader.Cardano.hash_plutus_data(datum)
+        value,datum && Loader.Cardano.hash_plutus_data(datum),
+        Loader.Cardano.BigNum.from_str(CardanoBlockchain.protocolParameters.minUtxo)
+        
     );
 
     if (minAda.compare(value.coin()) == 1) value.set_coin(minAda);
